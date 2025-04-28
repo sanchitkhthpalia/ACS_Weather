@@ -25,9 +25,6 @@ If you would like to contribute to the Weather Dashboard project, please follow 
 4. Push your changes to your forked repository.
 5. Submit a pull request to the original repository.
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
 
 ## Testing
 
