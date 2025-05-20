@@ -1,15 +1,40 @@
 # Weather Dashboard
 
-## Installation
+A modern, responsive weather dashboard web app that allows users to search for any city and view the current weather and a 5-day forecast. Built for a 1-hour coding test, with a focus on clean code, usability, and visual polish.
 
-To use the Weather Dashboard, simply open the `index.html` file in a web browser. No additional installation is required.
+## Features
+- Search for any city and get real-time weather data
+- Displays current weather (temperature, humidity, wind, pressure, etc.)
+- 5-day forecast with weather icons and subtle color tints
+- Animated gradient background for a modern look
+- Smooth card hover and fade-in animations
+- Responsive design for desktop and mobile
+- Error and loading states for better UX
 
-## Usage
+## Tech Stack
+- HTML, CSS (Tailwind, custom styles)
+- JavaScript (vanilla)
+- [OpenWeatherMap API](https://openweathermap.org/api)
 
-1. Enter the name of the city you want to get the weather information for in the input field.
-2. Click the "Search" button or press the "Enter" key to fetch the weather data.
-3. The current weather information for the selected city will be displayed, including the temperature, weather description, humidity, wind speed, feels like temperature, and pressure.
-4. The 5-day forecast for the city will also be displayed, showing the weather conditions for each day.
+## Setup & Usage
+1. Clone or download this repository.
+2. Open a terminal in the project directory.
+3. Start a simple HTTP server (Python example):
+   ```sh
+   python -m http.server 8000
+   ```
+4. Open your browser and go to [http://localhost:8000](http://localhost:8000)
+5. Enter a city name and view the weather!
+
+## Notes
+- This project was completed as a 1-hour coding test assignment. The focus was on delivering a clean, functional, and visually appealing solution within a short timeframe.
+- The app uses the free OpenWeatherMap API. You can replace the API key in `index.html` with your own if needed.
+
+## Screenshots
+![screenshot](screenshot.png)
+
+---
+Feel free to use or extend this project!
 
 ## API
 
