@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -12,17 +13,57 @@
             font-family: 'Inter', sans-serif;
             background: linear-gradient(to right, #1a1c20, #2d3748);
             min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        #particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
         .glass {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            transition: all 0.3s ease;
+        }
+        .glass:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.15);
         }
         .weather-card {
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            position: relative;
+            overflow: hidden;
+        }
+        .weather-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+        .weather-card:hover::before {
+            left: 100%;
         }
         .weather-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-5px) rotateX(5deg);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
         }
         .loading {
             animation: spin 1s linear infinite;
@@ -31,10 +72,41 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .temperature-display {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .weather-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .weather-icon-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
     </style>
 </head>
 <body class="text-white p-4">
-    <div class="max-w-6xl mx-auto">
+    <div id="particles-container"></div>
+    <div class="content-wrapper max-w-6xl mx-auto">
         <!-- Search Section -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold mb-6 text-center">Weather Dashboard</h1>
@@ -63,6 +135,7 @@
                 <h2 id="cityName" class="text-2xl font-bold mb-4"></h2>
                 <div class="flex justify-center items-center gap-4 mb-4">
                     <img id="weatherIcon" src="" alt="Weather icon" class="w-16 h-16">
+                    <div id="weather3dIconContainer"></div>
                     <div class="text-4xl font-bold" id="temperature"></div>
                 </div>
                 <div id="description" class="text-xl mb-4"></div>
@@ -99,11 +172,128 @@
     </div>
 
     <script>
-        const API_KEY = "972eea378a3b211b6468a052f5d68991"; // Replace with your actual API key
+        // Three.js Particle System
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('particles-container').appendChild(renderer.domElement);
+
+        // Create particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.005,
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = 2;
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.y += 0.0005;
+            particlesMesh.rotation.x += 0.0002;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        const API_KEY = "972eea378a3b211b6468a052f5d68991";
         const loading = document.getElementById('loading');
         const error = document.getElementById('error');
         const currentWeather = document.getElementById('currentWeather');
         const forecast = document.getElementById('forecast');
+
+        // 3D Weather Icon System
+        let weatherIconScene, weatherIconCamera, weatherIconRenderer, weatherIconMesh;
+
+        function initWeatherIcon() {
+            weatherIconScene = new THREE.Scene();
+            weatherIconCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            weatherIconRenderer = new THREE.WebGLRenderer({ alpha: true });
+            weatherIconRenderer.setSize(100, 100);
+            document.getElementById('weatherIcon').parentElement.appendChild(weatherIconRenderer.domElement);
+            weatherIconCamera.position.z = 2;
+        }
+
+        function createWeatherIcon(weatherCondition, container) {
+            // Remove previous renderer if any
+            if (container && container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            weatherIconScene = new THREE.Scene();
+            weatherIconCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            weatherIconRenderer = new THREE.WebGLRenderer({ alpha: true });
+            weatherIconRenderer.setSize(64, 64);
+            if (container) container.appendChild(weatherIconRenderer.domElement);
+            weatherIconCamera.position.z = 2;
+            let geometry;
+            switch(weatherCondition) {
+                case 'Clear':
+                    geometry = new THREE.SphereGeometry(0.5, 32, 32);
+                    break;
+                case 'Clouds':
+                    geometry = new THREE.SphereGeometry(0.4, 32, 32);
+                    break;
+                case 'Rain':
+                    geometry = new THREE.ConeGeometry(0.3, 0.8, 32);
+                    break;
+                case 'Snow':
+                    geometry = new THREE.SphereGeometry(0.3, 32, 32);
+                    break;
+                default:
+                    geometry = new THREE.SphereGeometry(0.4, 32, 32);
+            }
+            const material = new THREE.MeshPhongMaterial({
+                color: weatherCondition === 'Clear' ? 0xffff00 : 
+                       weatherCondition === 'Clouds' ? 0xffffff :
+                       weatherCondition === 'Rain' ? 0x4444ff :
+                       weatherCondition === 'Snow' ? 0xffffff : 0xffffff,
+                emissive: weatherCondition === 'Clear' ? 0xffff00 : 0x000000,
+                shininess: 100
+            });
+            weatherIconMesh = new THREE.Mesh(geometry, material);
+            weatherIconScene.add(weatherIconMesh);
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            weatherIconScene.add(ambientLight);
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            weatherIconScene.add(directionalLight);
+            function animateWeatherIcon() {
+                requestAnimationFrame(animateWeatherIcon);
+                if (weatherIconMesh) {
+                    weatherIconMesh.rotation.y += 0.01;
+                    weatherIconMesh.rotation.x += 0.005;
+                }
+                weatherIconRenderer.render(weatherIconScene, weatherIconCamera);
+            }
+            animateWeatherIcon();
+        }
+
+        // Initialize 3D weather icon
+        initWeatherIcon();
 
         async function getWeather() {
             const city = document.getElementById('cityInput').value;
@@ -133,35 +323,47 @@
 
         function displayCurrentWeather(data) {
             currentWeather.classList.remove('hidden');
+            currentWeather.classList.add('fade-in');
 
             document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country}`;
-            document.getElementById('temperature').textContent = `${Math.round(data.main.temp)}°C`;
+            document.getElementById('temperature').innerHTML = `
+                <span class="temperature-display">${Math.round(data.main.temp)}°C</span>
+            `;
             document.getElementById('description').textContent = data.weather[0].description;
             document.getElementById('humidity').textContent = `${data.main.humidity}%`;
             document.getElementById('windSpeed').textContent = `${data.wind.speed} m/s`;
             document.getElementById('feelsLike').textContent = `${Math.round(data.main.feels_like)}°C`;
             document.getElementById('pressure').textContent = `${data.main.pressure} hPa`;
 
+            // Set OpenWeatherMap icon
             const iconCode = data.weather[0].icon;
             document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+
+            // Update 3D weather icon
+            // Remove previous 3D canvas if any
+            const container = document.getElementById('weather3dIconContainer');
+            container.innerHTML = '';
+            // Create a new canvas for the 3D icon
+            createWeatherIcon(data.weather[0].main, container);
         }
 
         function displayForecast(data) {
             forecast.classList.remove('hidden');
+            forecast.classList.add('fade-in');
             const container = document.getElementById('forecastContainer');
             container.innerHTML = '';
 
             const dailyForecasts = data.list.filter(item => item.dt_txt.includes('12:00:00'));
 
-            dailyForecasts.forEach(day => {
+            dailyForecasts.forEach((day, index) => {
                 const date = new Date(day.dt * 1000);
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
 
+                const iconCode = day.weather[0].icon;
                 const forecastCard = `
-                    <div class="glass rounded-lg p-4 text-center weather-card">
+                    <div class="glass rounded-lg p-4 text-center weather-card" style="animation-delay: ${index * 0.1}s">
                         <div class="font-bold mb-2">${dayName}</div>
-                        <img src="https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png"
-                            alt="Weather icon" class="w-12 h-12 mx-auto">
+                        <img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="Weather icon" class="w-12 h-12 mx-auto mb-2">
                         <div class="text-xl font-bold mb-1">${Math.round(day.main.temp)}°C</div>
                         <div class="text-sm">${day.weather[0].description}</div>
                     </div>
@@ -195,6 +397,5 @@
             if (e.key === 'Enter') getWeather();
         });
     </script>
-    
 </body>
 </html>
