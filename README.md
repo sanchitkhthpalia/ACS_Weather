@@ -1,6 +1,6 @@
 # Weather Dashboard
 
-A modern, responsive weather dashboard web app that allows users to search for any city and view the current weather and a 5-day forecast. Built for a 1-hour coding test, with a focus on clean code, usability, and visual polish.
+A modern, responsive weather dashboard web app that allows users to search for any city and view the current weather and a 5-day forecast. 
 
 ## Features
 - Search for any city and get real-time weather data
@@ -54,3 +54,4 @@ If you would like to contribute to the Weather Dashboard project, please follow 
 ## Testing
 
 To test the Weather Dashboard, simply open the `index.html` file in a web browser and interact with the application. Ensure that the search functionality, current weather display, and 5-day forecast work as expected.
+
