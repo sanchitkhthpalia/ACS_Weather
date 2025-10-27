@@ -14,7 +14,7 @@ A modern, responsive weather dashboard web app that allows users to search for a
 ## Tech Stack
 - HTML, CSS (Tailwind, custom styles)
 - JavaScript (vanilla)
-- [OpenWeatherMap API](https://openweathermap.org/api)
+- [Open-Meteo API](https://open-meteo.com/) (free, no API key required)
 
 ## Setup & Usage
 1. Clone or download this repository.
@@ -28,7 +28,7 @@ A modern, responsive weather dashboard web app that allows users to search for a
 
 ## Notes
 - This project was completed as a 1-hour coding test assignment. The focus was on delivering a clean, functional, and visually appealing solution within a short timeframe.
-- The app uses the free OpenWeatherMap API. You can replace the API key in `index.html` with your own if needed.
+- The app uses the free Open-Meteo API which requires no API key and provides reliable weather data.
 
 ## Screenshots
 ![screenshot](screenshot.png)
@@ -38,7 +38,7 @@ Feel free to use or extend this project!
 
 ## API
 
-The Weather Dashboard uses the [OpenWeatherMap API](https://openweathermap.org/api) to fetch the weather data. You will need to replace the `API_KEY` variable in the `index.html` file with your own API key from OpenWeatherMap.
+The Weather Dashboard uses the [Open-Meteo API](https://open-meteo.com/) to fetch the weather data. This is a free API that requires no registration or API key, making it easy to use and deploy.
 
 ## Contributing
 

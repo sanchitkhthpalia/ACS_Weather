@@ -218,7 +218,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        const API_KEY = "972eea378a3b211b6468a052f5d68991";
+        // Open-Meteo API (no API key required)
         const loading = document.getElementById('loading');
         const error = document.getElementById('error');
         const currentWeather = document.getElementById('currentWeather');
@@ -295,6 +295,61 @@
         // Initialize 3D weather icon
         initWeatherIcon();
 
+        // Open-Meteo weather code conversion functions
+        function getWeatherCondition(code) {
+            if (code === 0) return 'Clear';
+            if (code <= 3) return 'Clouds';
+            if (code <= 48) return 'Clouds';
+            if (code <= 67) return 'Rain';
+            if (code <= 77) return 'Snow';
+            if (code <= 82) return 'Rain';
+            if (code <= 86) return 'Snow';
+            if (code <= 99) return 'Rain';
+            return 'Clouds';
+        }
+
+        function getWeatherDescription(code) {
+            const descriptions = {
+                0: 'Clear sky',
+                1: 'Mainly clear',
+                2: 'Partly cloudy',
+                3: 'Overcast',
+                45: 'Fog',
+                48: 'Depositing rime fog',
+                51: 'Light drizzle',
+                53: 'Moderate drizzle',
+                55: 'Dense drizzle',
+                61: 'Slight rain',
+                63: 'Moderate rain',
+                65: 'Heavy rain',
+                71: 'Slight snow',
+                73: 'Moderate snow',
+                75: 'Heavy snow',
+                77: 'Snow grains',
+                80: 'Slight rain showers',
+                81: 'Moderate rain showers',
+                82: 'Violent rain showers',
+                85: 'Slight snow showers',
+                86: 'Heavy snow showers',
+                95: 'Thunderstorm',
+                96: 'Thunderstorm with slight hail',
+                99: 'Thunderstorm with heavy hail'
+            };
+            return descriptions[code] || 'Unknown';
+        }
+
+        function getWeatherIcon(code) {
+            if (code === 0) return '01d';
+            if (code <= 3) return '02d';
+            if (code <= 48) return '04d';
+            if (code <= 67) return '10d';
+            if (code <= 77) return '13d';
+            if (code <= 82) return '09d';
+            if (code <= 86) return '13d';
+            if (code <= 99) return '11d';
+            return '02d';
+        }
+
         async function getWeather() {
             const city = document.getElementById('cityInput').value;
             if (!city) return;
@@ -303,17 +358,48 @@
             clearError();
 
             try {
-                // Current Weather
-                const weatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
-                if (!weatherResponse.ok) throw new Error('City not found');
+                // First, get coordinates for the city using geocoding
+                const geocodeResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+                if (!geocodeResponse.ok) throw new Error('City not found');
+                const geocodeData = await geocodeResponse.json();
+                
+                if (!geocodeData.results || geocodeData.results.length === 0) {
+                    throw new Error('City not found');
+                }
+
+                const { latitude, longitude, name, country } = geocodeData.results[0];
+
+                // Get current weather and forecast using coordinates
+                const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,windspeed_10m,pressure_msl,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
+                if (!weatherResponse.ok) throw new Error('Weather data not available');
                 const weatherData = await weatherResponse.json();
 
-                // Forecast
-                const forecastResponse = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
-                const forecastData = await forecastResponse.json();
+                // Transform data to match expected format
+                const transformedData = {
+                    name: name,
+                    country: country,
+                    main: {
+                        temp: weatherData.current_weather.temperature,
+                        feels_like: weatherData.current_weather.temperature, // Open-Meteo doesn't provide feels_like
+                        humidity: weatherData.hourly.relativehumidity_2m[0],
+                        pressure: weatherData.hourly.pressure_msl[0]
+                    },
+                    weather: [{
+                        main: getWeatherCondition(weatherData.current_weather.weathercode),
+                        description: getWeatherDescription(weatherData.current_weather.weathercode),
+                        icon: getWeatherIcon(weatherData.current_weather.weathercode)
+                    }],
+                    wind: {
+                        speed: weatherData.current_weather.windspeed
+                    },
+                    sys: {
+                        country: country
+                    },
+                    forecast: weatherData.daily
+                };
 
-                displayCurrentWeather(weatherData);
-                displayForecast(forecastData);
+                displayCurrentWeather(transformedData);
+                displayForecast(transformedData);
             } catch (err) {
                 showError(err.message);
             } finally {
@@ -353,23 +439,31 @@
             const container = document.getElementById('forecastContainer');
             container.innerHTML = '';
 
-            const dailyForecasts = data.list.filter(item => item.dt_txt.includes('12:00:00'));
+            const dailyForecasts = data.forecast;
 
-            dailyForecasts.forEach((day, index) => {
-                const date = new Date(day.dt * 1000);
+            // Process daily forecast data
+            for (let i = 0; i < Math.min(5, dailyForecasts.time.length); i++) {
+                const date = new Date(dailyForecasts.time[i]);
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const weatherCode = dailyForecasts.weathercode[i];
+                const maxTemp = dailyForecasts.temperature_2m_max[i];
+                const minTemp = dailyForecasts.temperature_2m_min[i];
+                const avgTemp = Math.round((maxTemp + minTemp) / 2);
 
-                const iconCode = day.weather[0].icon;
+                const iconCode = getWeatherIcon(weatherCode);
+                const description = getWeatherDescription(weatherCode);
+                
                 const forecastCard = `
-                    <div class="glass rounded-lg p-4 text-center weather-card" style="animation-delay: ${index * 0.1}s">
+                    <div class="glass rounded-lg p-4 text-center weather-card" style="animation-delay: ${i * 0.1}s">
                         <div class="font-bold mb-2">${dayName}</div>
                         <img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="Weather icon" class="w-12 h-12 mx-auto mb-2">
-                        <div class="text-xl font-bold mb-1">${Math.round(day.main.temp)}°C</div>
-                        <div class="text-sm">${day.weather[0].description}</div>
+                        <div class="text-xl font-bold mb-1">${avgTemp}°C</div>
+                        <div class="text-sm">${description}</div>
+                        <div class="text-xs text-gray-300 mt-1">${Math.round(minTemp)}°/${Math.round(maxTemp)}°</div>
                     </div>
                 `;
                 container.innerHTML += forecastCard;
-            });
+            }
         }
 
         function showLoading() {
