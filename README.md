@@ -31,7 +31,7 @@ A modern, responsive weather dashboard web app that allows users to search for a
 - The app uses the free Open-Meteo API which requires no API key and provides reliable weather data.
 
 ## Screenshots
-![screenshot](screenshot.png)
+![screenshot](screenshot.jpg)
 
 ---
 Feel free to use or extend this project!
@@ -54,5 +54,6 @@ If you would like to contribute to the Weather Dashboard project, please follow 
 ## Testing
 
 To test the Weather Dashboard, simply open the `index.html` file in a web browser and interact with the application. Ensure that the search functionality, current weather display, and 5-day forecast work as expected.
+
 
 
