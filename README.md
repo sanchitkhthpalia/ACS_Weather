@@ -27,7 +27,7 @@ A modern, responsive weather dashboard web app that allows users to search for a
 5. Enter a city name and view the weather!
 
 ## Notes
-- This project was completed as a 1-hour coding test assignment. The focus was on delivering a clean, functional, and visually appealing solution within a short timeframe.
+- The focus was on delivering a clean, functional, and visually appealing solution within a short timeframe.
 - The app uses the free Open-Meteo API which requires no API key and provides reliable weather data.
 
 ## Screenshots
@@ -54,4 +54,5 @@ If you would like to contribute to the Weather Dashboard project, please follow 
 ## Testing
 
 To test the Weather Dashboard, simply open the `index.html` file in a web browser and interact with the application. Ensure that the search functionality, current weather display, and 5-day forecast work as expected.
+
 
